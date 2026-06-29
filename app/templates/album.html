@@ -5,8 +5,9 @@
 <!-- Hero Section / Cover -->
 {% if cover %}
 <div class="relative w-full h-[60vh] md:h-[80vh] overflow-hidden">
-    <!-- Using original_path for highest quality hero cover -->
-    <img src="{{ url_for('static', filename=cover.original_path) }}"
+    <!-- Using 1600w WebP for fast highest quality hero cover -->
+    <img src="{{ url_for('static', filename=cover.sizes_dict['1600w']) }}"
+        fetchpriority="high" rel="preload" decoding="async"
         class="absolute inset-0 w-full h-full object-cover object-center" alt="Cover">
     <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-[#0a0a0a]"></div>
 
@@ -73,6 +74,20 @@
 <!-- Justified Collage Gallery -->
 <div class="max-w-[120rem] mx-auto px-2 sm:px-4 lg:px-6 py-8 sm:py-12" x-data="galleryLoader()">
 
+    <style>
+        #photo-grid {
+            --row-height: 150px;
+        }
+        @media (min-width: 640px) {
+            #photo-grid { --row-height: 200px; }
+        }
+        @media (min-width: 1024px) {
+            #photo-grid { --row-height: 250px; }
+        }
+        @media (min-width: 1536px) {
+            #photo-grid { --row-height: 300px; }
+        }
+    </style>
     <!-- Masonry Container (Row-based Justified Gallery) -->
     <div id="photo-grid" class="flex flex-wrap gap-2 sm:gap-4 after:content-[''] after:grow-[9999999]">
         {% include "partials/photo_grid.html" %}
