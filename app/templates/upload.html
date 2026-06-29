@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Create Album{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="bg-zinc-900/50 backdrop-blur border border-zinc-800/50 rounded-3xl shadow-2xl overflow-hidden">
+        <div class="px-6 py-8 sm:p-10 border-b border-zinc-800/50">
+            <h1 class="text-3xl font-bold tracking-tight text-white text-center">New Album</h1>
+            <p class="mt-2 text-center text-sm text-zinc-400">Upload photos directly from your browser.</p>
+        </div>
+        
+        <div class="px-6 py-8 sm:p-10 space-y-8" x-data="uploadForm()">
+            <!-- Title -->
+            <div>
+                <label for="title" class="block text-sm font-medium text-zinc-300">Album Title</label>
+                <input type="text" id="title" required 
+                       class="mt-2 block w-full rounded-xl border-zinc-700 shadow-sm focus:border-zinc-500 focus:ring-zinc-500 sm:text-sm px-4 py-3 border bg-zinc-900 text-white placeholder-zinc-500 transition-colors"
+                       placeholder="e.g. Summer in Tokyo">
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-zinc-300">Description (Optional)</label>
+                <textarea id="description" rows="3" 
+                          class="mt-2 block w-full rounded-xl border-zinc-700 shadow-sm focus:border-zinc-500 focus:ring-zinc-500 sm:text-sm px-4 py-3 border bg-zinc-900 text-white placeholder-zinc-500 transition-colors"
+                          placeholder="A brief description..."></textarea>
+            </div>
+
+            <!-- Drag & Drop Zone -->
+            <div>
+                <label class="block text-sm font-medium text-zinc-300 mb-2">Photos</label>
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-2xl transition-colors duration-200"
+                     :class="{ 'border-zinc-500 bg-zinc-800/50': isDragging, 'border-zinc-700 bg-zinc-900/30 hover:bg-zinc-800/30': !isDragging }"
+                     @dragover.prevent="isDragging = true"
+                     @dragleave.prevent="isDragging = false"
+                     @drop.prevent="handleDrop($event)">
+                    
+                    <div class="space-y-2 text-center w-full">
+                        <svg class="mx-auto h-12 w-12 text-zinc-600" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        
+                        <div class="flex text-sm text-zinc-400 justify-center">
+                            <label for="photos" class="relative cursor-pointer rounded-md font-medium text-zinc-200 hover:text-white focus-within:outline-none px-1">
+                                <span>Upload files</span>
+                                <input id="photos" type="file" multiple class="sr-only" @change="handleFiles($event)" accept="image/*">
+                            </label>
+                            <p class="pl-1">or drag and drop</p>
+                        </div>
+                        
+                        <!-- File count & clear preview -->
+                        <div x-show="files.length > 0" x-cloak class="mt-4">
+                            <p class="text-sm font-semibold text-zinc-200 w-full mb-2">
+                                <span x-text="files.length"></span> files selected
+                            </p>
+                            <button @click="files = []" class="text-xs text-red-400 hover:text-red-300 underline">Clear all</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Progress UI -->
+            <div x-show="isUploading" x-cloak class="mt-6">
+                <div class="flex justify-between text-sm text-zinc-400 mb-1">
+                    <span x-text="uploadStatus"></span>
+                    <span x-text="uploadProgress + '%'"></span>
+                </div>
+                <div class="w-full bg-zinc-800 rounded-full h-2.5">
+                    <div class="bg-zinc-200 h-2.5 rounded-full transition-all duration-300 ease-out" :style="`width: ${uploadProgress}%`"></div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+                <button type="button" 
+                        class="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-[#0a0a0a] bg-zinc-100 hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 transition-colors"
+                        :class="{'opacity-50 cursor-not-allowed': isUploading || files.length === 0}"
+                        :disabled="isUploading || files.length === 0"
+                        @click="submitForm()">
+                    <span x-show="!isUploading">Create Album & Upload</span>
+                    <span x-show="isUploading" x-cloak class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-[#0a0a0a]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Working...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('uploadForm', () => ({
+            isDragging: false,
+            isUploading: false,
+            uploadProgress: 0,
+            uploadStatus: '',
+            files: [],
+            
+            handleDrop(e) {
+                this.isDragging = false;
+                if (e.dataTransfer.files.length > 0) {
+                    this.files = [...this.files, ...Array.from(e.dataTransfer.files)];
+                }
+            },
+            
+            handleFiles(e) {
+                this.files = [...this.files, ...Array.from(e.target.files)];
+                e.target.value = ''; // allow picking the same file again if needed
+            },
+            
+            async submitForm() {
+                if (this.files.length === 0) return;
+                
+                const title = document.getElementById('title').value;
+                if (!title) {
+                    alert('Please enter an album title.');
+                    return;
+                }
+
+                this.isUploading = true;
+                this.uploadStatus = 'Creating album...';
+                this.uploadProgress = 0;
+                
+                const description = document.getElementById('description').value;
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('description', description);
+                
+                try {
+                    const res = await fetch('/create_album', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    
+                    if (!res.ok) throw new Error(data.error);
+                    
+                    const albumId = data.album_id;
+                    const redirectUrl = data.redirect_url;
+                    
+                    // Upload photos sequentially
+                    for (let i = 0; i < this.files.length; i++) {
+                        this.uploadStatus = `Uploading photo ${i + 1} of ${this.files.length}...`;
+                        
+                        const photoData = new FormData();
+                        photoData.append('file', this.files[i]);
+                        if (i === 0) photoData.append('is_cover', 'true');
+                        
+                        const uploadRes = await fetch(`/upload_photo/${albumId}`, {
+                            method: 'POST',
+                            body: photoData
+                        });
+                        
+                        if (!uploadRes.ok) {
+                            console.error('Failed to upload', this.files[i].name);
+                        }
+                        
+                        this.uploadProgress = Math.round(((i + 1) / this.files.length) * 100);
+                    }
+                    
+                    this.uploadStatus = 'Success! Redirecting...';
+                    window.location.href = redirectUrl;
+                    
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                    this.isUploading = false;
+                }
+            }
+        }))
+    })
+</script>
+
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+{% endblock %}

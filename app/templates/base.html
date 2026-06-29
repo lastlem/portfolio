@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru" class="antialiased text-zinc-200 bg-[#0a0a0a]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Photofolio{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <style>
+        /* Улучшение рендеринга шрифтов в стиле Apple */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="py-8 text-center text-sm text-zinc-600">
+        &copy; 2024 Photofolio. Minimalist Delivery.
+    </footer>
+</body>
+</html>

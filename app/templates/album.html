@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}{{ album.title }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section / Cover -->
+{% if cover %}
+<div class="relative w-full h-[60vh] md:h-[80vh] overflow-hidden">
+    <!-- Using original_path for highest quality hero cover -->
+    <img src="{{ url_for('static', filename=cover.original_path) }}"
+        class="absolute inset-0 w-full h-full object-cover object-center" alt="Cover">
+    <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-[#0a0a0a]"></div>
+
+    <!-- Top left navigation -->
+    <div class="absolute top-6 left-6 z-20">
+        <a href="{{ url_for('main.explore') }}"
+            class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition-colors border border-white/10 shadow-lg"
+            title="Back to Portfolio">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+                </path>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Title & Admin Controls -->
+    <div class="absolute inset-0 flex flex-col items-center justify-center text-white px-4 text-center z-10 pt-20">
+        <h1 class="text-5xl md:text-8xl font-extrabold tracking-tight mb-6 drop-shadow-2xl">{{ album.title }}</h1>
+        {% if album.description %}
+        <p class="text-lg md:text-2xl font-light max-w-2xl text-zinc-200 drop-shadow-md">{{ album.description }}</p>
+        {% endif %}
+
+        <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <!-- Download All Button (Visible to everyone) -->
+            <a href="{{ url_for('main.download_all', token=album.token) }}"
+                class="inline-flex items-center px-5 py-2.5 border border-white/20 backdrop-blur-md text-sm font-medium rounded-full text-white bg-white/10 hover:bg-white/20 transition-colors shadow-lg">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Download All
+            </a>
+
+            {% if is_admin %}
+            <a href="{{ url_for('main.edit_album', album_id=album.id) }}"
+                class="inline-flex items-center px-5 py-2.5 border border-zinc-700/50 backdrop-blur-md text-sm font-medium rounded-full text-white bg-black/50 hover:bg-black/80 transition-colors">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Photos
+            </a>
+
+            <!-- Admin Pagination Controls (Classic) -->
+            {% if pagination.pages > 1 %}
+            <div
+                class="flex items-center gap-2 px-4 py-2 border border-zinc-700/50 backdrop-blur-md rounded-full bg-black/50">
+                <span class="text-xs text-zinc-400 mr-2">Admin Pages:</span>
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('main.view_album', token=album.token, page=pagination.prev_num) }}"
+                    class="text-white hover:text-zinc-300 px-2">&larr; Prev</a>
+                {% endif %}
+                <span class="text-white text-sm font-semibold">{{ pagination.page }} / {{ pagination.pages }}</span>
+                {% if pagination.has_next %}
+                <a href="{{ url_for('main.view_album', token=album.token, page=pagination.next_num) }}"
+                    class="text-white hover:text-zinc-300 px-2">Next &rarr;</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Justified Collage Gallery -->
+<div class="max-w-[120rem] mx-auto px-2 sm:px-4 lg:px-6 py-8 sm:py-12" x-data="galleryLoader()">
+
+    <!-- Justified Flex Container -->
+    <div id="photo-grid" class="flex flex-wrap gap-1 sm:gap-2 after:content-[''] after:flex-grow-[99999] after:min-w-[30%]">
+        {% include "partials/photo_grid.html" %}
+    </div>
+
+    <!-- Load More Button -->
+    <div x-show="hasMore" class="mt-16 flex justify-center pb-20">
+        <button @click="loadMore()"
+            class="px-8 py-4 border border-zinc-800 rounded-full text-sm font-medium text-white bg-zinc-900 hover:bg-zinc-800 transition-colors shadow-xl flex items-center gap-2 disabled:opacity-50"
+            :disabled="isLoading">
+            <span x-show="!isLoading">Load More Photos</span>
+            <span x-show="isLoading" x-cloak>
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+            </span>
+        </button>
+    </div>
+
+    <!-- Single Global Lightbox -->
+    <div x-show="lightboxOpen" @open-lightbox.window="lightboxOpen = true; currentImage = $event.detail"
+        @keydown.escape.window="lightboxOpen = false"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm" x-transition.opacity
+        x-cloak>
+        <button @click="lightboxOpen = false"
+            class="absolute top-6 right-6 text-zinc-400 hover:text-white text-5xl focus:outline-none transition-colors">&times;</button>
+        <img :src="currentImage" @click.away="lightboxOpen = false"
+            class="max-w-[95vw] max-h-[95vh] object-contain rounded-lg shadow-2xl">
+    </div>
+</div>
+
+<!-- Floating Action Button (Share) -->
+<div x-data="shareComponent()" class="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 z-50">
+    <button @click="shareAlbum()"
+        class="flex items-center justify-center w-14 h-14 bg-zinc-100 text-[#0a0a0a] rounded-full shadow-2xl hover:bg-white hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300 focus:outline-none"
+        title="Share Album">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        </svg>
+    </button>
+
+    <!-- Toast Notification -->
+    <div x-show="showToast" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-4" x-cloak
+        class="absolute bottom-16 right-0 mb-2 w-max bg-zinc-800 text-white text-sm px-4 py-2 rounded-lg shadow-lg">
+        Link copied to clipboard!
+    </div>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('shareComponent', () => ({
+            showToast: false,
+            async shareAlbum() {
+                try {
+                    await navigator.clipboard.writeText(window.location.href);
+                    this.showToast = true;
+                    setTimeout(() => { this.showToast = false; }, 3000);
+                } catch (err) {
+                    const el = document.createElement('textarea');
+                    el.value = window.location.href;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    this.showToast = true;
+                    setTimeout(() => { this.showToast = false; }, 3000);
+                }
+            }
+        }));
+
+        Alpine.data('galleryLoader', () => ({
+            currentPage: 1,
+            isLoading: false,
+            hasMore: {{ 'true' if pagination.has_next else 'false' }},
+            lightboxOpen: false,
+            currentImage: '',
+
+            async loadMore() {
+                if (this.isLoading || !this.hasMore) return;
+                this.isLoading = true;
+
+                try {
+                    this.currentPage++;
+                    const res = await fetch(`{{ url_for('main.photos_partial', token=album.token) }}?page=${this.currentPage}`);
+                    if (!res.ok) throw new Error('Failed to fetch photos');
+
+                    const hasNext = res.headers.get('X-Has-Next');
+                    const htmlSnippet = await res.text();
+
+                    if (htmlSnippet.trim() !== '') {
+                        const grid = document.getElementById('photo-grid');
+                        grid.insertAdjacentHTML('beforeend', htmlSnippet);
+                    }
+
+                    this.hasMore = (hasNext === 'true');
+                } catch (err) {
+                    console.error(err);
+                    this.currentPage--;
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+        }));
+    });
+</script>
+
+<style>
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
+{% endblock %}

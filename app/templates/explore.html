@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Portfolio{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="relative overflow-hidden border-b border-zinc-800/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6">
+            Visual Stories.
+        </h1>
+        <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-zinc-400">
+            A minimalist aesthetic portfolio showcasing my latest photography sessions.
+        </p>
+        
+        {% if is_admin %}
+        <div class="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{{ url_for('main.create_album') }}" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-[#0a0a0a] bg-white hover:bg-zinc-200 transition-colors">
+                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                New Album
+            </a>
+            <a href="{{ url_for('main.admin_logout') }}" class="inline-flex items-center justify-center px-6 py-3 border border-zinc-700 text-base font-medium rounded-full text-zinc-300 bg-transparent hover:bg-zinc-800 transition-colors">
+                Logout
+            </a>
+        </div>
+        <div class="mt-6">
+            <span class="inline-flex items-center rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400 ring-1 ring-inset ring-red-500/20">Admin Mode Active</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Albums Grid -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    {% if albums %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+        {% for album in albums %}
+        <div class="group relative flex flex-col items-start justify-between">
+            <div class="relative w-full aspect-[4/5] bg-zinc-900 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 ease-in-out transform group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-white/5 ring-1 ring-white/5">
+                <a href="{{ url_for('main.view_album', token=album.token) }}" class="absolute inset-0 z-10">
+                    <span class="sr-only">View Album</span>
+                </a>
+                {% if album.cover %}
+                <img src="{{ url_for('static', filename=album.cover.thumbnail_path) }}" alt="{{ album.title }}" class="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {% else %}
+                <div class="flex items-center justify-center h-full w-full text-zinc-700">
+                    <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                {% endif %}
+                
+                {% if is_admin %}
+                <!-- Admin Delete Form -->
+                <form action="{{ url_for('main.delete_album', album_id=album.id) }}" method="POST" class="absolute top-3 right-3 z-20" onsubmit="return confirm('Are you sure you want to delete this album?');">
+                    <button type="submit" class="p-2 bg-black/50 backdrop-blur rounded-full text-red-400 hover:text-red-300 hover:bg-black/70 shadow-sm transition-colors" title="Delete Album">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4 flex flex-col justify-between w-full px-1">
+                <h3 class="text-lg font-semibold text-zinc-100 truncate" title="{{ album.title }}">
+                    <a href="{{ url_for('main.view_album', token=album.token) }}">{{ album.title }}</a>
+                </h3>
+                <p class="mt-1 text-sm text-zinc-500">{{ album.created_at.strftime('%Y-%m-%d') }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <svg class="mx-auto h-12 w-12 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <h3 class="mt-4 text-sm font-semibold text-zinc-300">No albums yet</h3>
+        <p class="mt-1 text-sm text-zinc-500">Wait for the photographer to upload something awesome.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
