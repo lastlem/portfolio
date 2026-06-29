@@ -73,8 +73,8 @@
 <!-- Justified Collage Gallery -->
 <div class="max-w-[120rem] mx-auto px-2 sm:px-4 lg:px-6 py-8 sm:py-12" x-data="galleryLoader()">
 
-    <!-- Masonry Container -->
-    <div id="photo-grid" class="columns-2 md:columns-3 lg:columns-4 gap-2 sm:gap-4">
+    <!-- Masonry Container (Row-based Justified Gallery) -->
+    <div id="photo-grid" class="flex flex-wrap gap-2 sm:gap-4 after:content-[''] after:grow-[9999999]">
         {% include "partials/photo_grid.html" %}
     </div>
 

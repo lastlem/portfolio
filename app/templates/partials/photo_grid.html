@@ -1,12 +1,14 @@
 {% for photo in photos %}
-<div class="photo-item group relative overflow-hidden bg-zinc-900 rounded-lg break-inside-avoid w-full mb-2 sm:mb-4"
+{% set aspect_ratio = (photo.img_width / photo.img_height) if (photo.img_width and photo.img_height) else 1.33 %}
+<div class="photo-item group relative overflow-hidden bg-zinc-900 rounded-lg"
      id="photo-{{ photo.id }}"
      data-id="{{ photo.id }}"
+     style="flex-grow: {{ aspect_ratio * 100 }}; width: {{ aspect_ratio * 300 }}px; max-width: 100%;"
      data-w="{{ photo.img_width or 400 }}"
      data-h="{{ photo.img_height or 300 }}">
 
     <!-- Maintain aspect ratio based on original image size to prevent layout shifts -->
-    <div style="padding-bottom: {{ (photo.img_height / photo.img_width * 100) if (photo.img_width and photo.img_width > 0) else 75 }}%;"></div>
+    <div style="padding-bottom: {{ (1 / aspect_ratio) * 100 }}%;"></div>
 
     {% if photo.status == 'processing' %}
         <!-- Pulsing placeholder while processing -->
