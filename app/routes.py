@@ -158,13 +158,13 @@ def upload_photo(album_id):
     if not allowed_file(file.filename):
         return jsonify({'error': 'Invalid file type'}), 400
         
-    orig, opt, thumb, img_width, img_height = process_and_save_image_sync(file, album.id)
+    orig, name_400w, name_800w, name_1600w, img_width, img_height = process_and_save_image_sync(file, album.id)
 
     new_photo = Photo(
         album_id=album.id,
         original_path=f"uploads/{album.id}/{orig}",
-        optimized_path=f"uploads/{album.id}/{opt}",
-        thumbnail_path=f"uploads/{album.id}/{thumb}",
+        optimized_path=f"uploads/{album.id}/{name_1600w}",
+        thumbnail_path=f"uploads/{album.id}/{name_400w}",
         is_cover=is_cover,
         img_width=img_width,
         img_height=img_height,
@@ -176,10 +176,11 @@ def upload_photo(album_id):
     # Запускаем тяжелую обработку в фоне с помощью пула потоков
     app = current_app._get_current_object()
     orig_path_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), orig)
-    opt_path_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), opt)
-    thumb_path_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), thumb)
+    path_400w_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), name_400w)
+    path_800w_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), name_800w)
+    path_1600w_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), name_1600w)
     
-    executor.submit(process_image_background, app, new_photo.id, orig_path_full, opt_path_full, thumb_path_full)
+    executor.submit(process_image_background, app, new_photo.id, orig_path_full, path_400w_full, path_800w_full, path_1600w_full)
     
     return jsonify({'success': True, 'photo_id': new_photo.id})
 
@@ -191,8 +192,9 @@ def delete_photo(photo_id):
     photo = Photo.query.get_or_404(photo_id)
     
     # Delete files from disk
-    for path_attr in ['original_path', 'optimized_path', 'thumbnail_path']:
-        full_path = os.path.join(current_app.root_path, 'static', getattr(photo, path_attr))
+    paths_to_delete = [photo.original_path] + list(photo.sizes_dict.values())
+    for path in paths_to_delete:
+        full_path = os.path.join(current_app.root_path, 'static', path)
         if os.path.exists(full_path):
             os.remove(full_path)
             

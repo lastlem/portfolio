@@ -23,3 +23,12 @@ class Photo(db.Model):
     img_height = db.Column(db.Integer, nullable=True)
     status = db.Column(db.String(20), default='ready')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def sizes_dict(self):
+        base = self.original_path.rsplit('_orig.jpg', 1)[0]
+        return {
+            '400w': f"{base}_400w.webp",
+            '800w': f"{base}_800w.webp",
+            '1600w': f"{base}_1600w.webp"
+        }

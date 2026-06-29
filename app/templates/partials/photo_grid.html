@@ -19,8 +19,10 @@
     {% else %}
         <!-- Actual Image -->
         <div class="photo-skeleton absolute inset-0 bg-zinc-800 animate-pulse"></div>
-        <img src="{{ url_for('static', filename=photo.thumbnail_path) }}"
-             data-medium="{{ url_for('static', filename=photo.optimized_path) }}"
+        <img src="{{ url_for('static', filename=photo.sizes_dict['400w']) }}"
+             srcset="{{ url_for('static', filename=photo.sizes_dict['400w']) }} 400w, {{ url_for('static', filename=photo.sizes_dict['800w']) }} 800w"
+             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 33vw, 25vw"
+             data-medium="{{ url_for('static', filename=photo.sizes_dict['1600w']) }}"
              data-full="{{ url_for('static', filename=photo.original_path) }}"
              class="absolute inset-0 w-full h-full object-cover cursor-pointer opacity-0 transition-all duration-300 group-hover:scale-[1.03]"
              loading="lazy"
