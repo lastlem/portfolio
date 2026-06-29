@@ -20,12 +20,13 @@
         <!-- Actual Image -->
         <div class="photo-skeleton absolute inset-0 bg-zinc-800 animate-pulse"></div>
         <img src="{{ url_for('static', filename=photo.thumbnail_path) }}"
+             data-medium="{{ url_for('static', filename=photo.optimized_path) }}"
              data-full="{{ url_for('static', filename=photo.original_path) }}"
              class="absolute inset-0 w-full h-full object-cover cursor-pointer opacity-0 transition-all duration-300 group-hover:scale-[1.03]"
              loading="lazy"
              alt="Photo"
              onload="this.previousElementSibling.style.display='none'; this.style.opacity='1';"
-             onclick="window.dispatchEvent(new CustomEvent('open-lightbox', {detail: this.dataset.full}))">
+             onclick="window.dispatchEvent(new CustomEvent('open-lightbox', {detail: { medium: this.dataset.medium, full: this.dataset.full } }))">
 
         <!-- Public Actions (Visible to everyone on hover) -->
         <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex gap-2">

@@ -2,12 +2,14 @@ import os
 import shutil
 import zipfile
 import tempfile
-import threading
+from concurrent.futures import ThreadPoolExecutor
 from flask import Blueprint, render_template, request, redirect, url_for, abort, current_app, jsonify, session, make_response, send_file
 from .models import db, Album, Photo
 from .image_utils import process_and_save_image_sync, process_image_background
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tiff'}
+
+executor = ThreadPoolExecutor(max_workers=4)
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -171,17 +173,13 @@ def upload_photo(album_id):
     db.session.add(new_photo)
     db.session.commit()
     
-    # Запускаем тяжелую обработку в фоне
+    # Запускаем тяжелую обработку в фоне с помощью пула потоков
     app = current_app._get_current_object()
     orig_path_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), orig)
     opt_path_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), opt)
     thumb_path_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), thumb)
     
-    thread = threading.Thread(
-        target=process_image_background, 
-        args=(app, new_photo.id, orig_path_full, opt_path_full, thumb_path_full)
-    )
-    thread.start()
+    executor.submit(process_image_background, app, new_photo.id, orig_path_full, opt_path_full, thumb_path_full)
     
     return jsonify({'success': True, 'photo_id': new_photo.id})
 

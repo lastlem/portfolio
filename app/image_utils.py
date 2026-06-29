@@ -32,7 +32,7 @@ def process_and_save_image_sync(file_obj, album_id):
 
 
 def process_image_background(app, photo_id, orig_path, opt_path, thumb_path):
-    """Фоновая задача для тяжелой обработки изображений (сжатие, миниатюры)."""
+    """Фоновая задача для генерации превью."""
     with app.app_context():
         # Импортируем внутри, чтобы избежать циклических импортов
         from .models import db, Photo
@@ -44,14 +44,14 @@ def process_image_background(app, photo_id, orig_path, opt_path, thumb_path):
                 if img.mode in ("RGBA", "P"):
                     img = img.convert("RGB")
 
-                # Оптимизированная версия (сохраняем идеальное качество, но в webp)
-                opt_img = img.copy()
-                opt_img.thumbnail((2560, 2560), Image.Resampling.LANCZOS)
-                opt_img.save(opt_path, 'WEBP', quality=95)
+                # Medium image (optimized_path in DB) - 1200px for lightbox initial load
+                medium_img = img.copy()
+                medium_img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+                medium_img.save(opt_path, 'WEBP', quality=90)
 
-                # Thumbnail для сетки
+                # Thumbnail (thumbnail_path in DB) - 400px for grid
                 thumb_img = img.copy()
-                thumb_img.thumbnail((800, 800), Image.Resampling.LANCZOS)
+                thumb_img.thumbnail((400, 400), Image.Resampling.LANCZOS)
                 thumb_img.save(thumb_path, 'WEBP', quality=85)
             
             # Обновляем статус фото в БД
