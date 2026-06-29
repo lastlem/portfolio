@@ -5,8 +5,11 @@
 <!-- Hero Section / Cover -->
 {% if cover %}
 <div class="relative w-full h-[60vh] md:h-[80vh] overflow-hidden">
-    <!-- Using 1600w WebP for fast highest quality hero cover -->
+    <!-- Using srcset to serve 1600w WebP to mobile/tablet, and original quality to large desktop screens -->
     <img src="{{ url_for('static', filename=cover.sizes_dict['1600w']) }}"
+        srcset="{{ url_for('static', filename=cover.sizes_dict['1600w']) }} 1600w,
+                {{ url_for('static', filename=cover.original_path) }} {{ cover.img_width|default(3000) }}w"
+        sizes="100vw"
         fetchpriority="high" rel="preload" decoding="async"
         class="absolute inset-0 w-full h-full object-cover object-center" alt="Cover">
     <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-[#0a0a0a]"></div>
