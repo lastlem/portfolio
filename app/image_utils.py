@@ -40,6 +40,9 @@ def process_image_background(app, photo_id, orig_path, path_400w, path_800w, pat
         
         try:
             with Image.open(orig_path) as img:
+                # ВАЖНО: Извлекаем ICC профиль ДО любых трансформаций
+                icc = img.info.get('icc_profile')
+                
                 img = ImageOps.exif_transpose(img)
                 
                 if img.mode in ("RGBA", "P"):
@@ -48,17 +51,17 @@ def process_image_background(app, photo_id, orig_path, path_400w, path_800w, pat
                 # 1600w for lightbox initial load
                 img_1600 = img.copy()
                 img_1600.thumbnail((1600, 1600), Image.Resampling.LANCZOS)
-                img_1600.save(path_1600w, 'WEBP', quality=90)
+                img_1600.save(path_1600w, 'WEBP', quality=100, method=6, icc_profile=icc)
 
                 # 800w for retina grid
                 img_800 = img.copy()
                 img_800.thumbnail((800, 800), Image.Resampling.LANCZOS)
-                img_800.save(path_800w, 'WEBP', quality=90)
+                img_800.save(path_800w, 'WEBP', quality=100, method=6, icc_profile=icc)
 
                 # 400w for standard grid
                 img_400 = img.copy()
                 img_400.thumbnail((400, 400), Image.Resampling.LANCZOS)
-                img_400.save(path_400w, 'WEBP', quality=90)
+                img_400.save(path_400w, 'WEBP', quality=100, method=6, icc_profile=icc)
             
             # Обновляем статус фото в БД
             photo = Photo.query.get(photo_id)

@@ -46,11 +46,11 @@ def view_album(token):
     page = request.args.get('page', 1, type=int)
     
     # Add simple pagination (50 photos per page)
-    pagination = Photo.query.filter_by(album_id=album.id).order_by(Photo.created_at.desc()).paginate(page=page, per_page=50, error_out=False)
+    pagination = Photo.query.filter_by(album_id=album.id).order_by(Photo.sort_order.asc(), Photo.id.asc()).paginate(page=page, per_page=50, error_out=False)
     photos = pagination.items
     
     # We still need a cover for the hero section
-    first_photo = Photo.query.filter_by(album_id=album.id).order_by(Photo.created_at.desc()).first()
+    first_photo = Photo.query.filter_by(album_id=album.id).order_by(Photo.sort_order.asc(), Photo.id.asc()).first()
     cover = next((p for p in photos if p.is_cover), first_photo)
     
     is_admin = session.get('is_admin', False)
@@ -61,7 +61,7 @@ def photos_partial(token):
     album = Album.query.filter_by(token=token).first_or_404()
     page = request.args.get('page', 1, type=int)
     
-    pagination = Photo.query.filter_by(album_id=album.id).order_by(Photo.created_at.desc()).paginate(page=page, per_page=50, error_out=False)
+    pagination = Photo.query.filter_by(album_id=album.id).order_by(Photo.sort_order.asc(), Photo.id.asc()).paginate(page=page, per_page=50, error_out=False)
     photos = pagination.items
     
     is_admin = session.get('is_admin', False)
@@ -160,6 +160,9 @@ def upload_photo(album_id):
         
     orig, name_400w, name_800w, name_1600w, img_width, img_height = process_and_save_image_sync(file, album.id)
 
+    max_order = db.session.query(db.func.max(Photo.sort_order)).filter_by(album_id=album.id).scalar()
+    next_order = (max_order or 0) + 1
+
     new_photo = Photo(
         album_id=album.id,
         original_path=f"uploads/{album.id}/{orig}",
@@ -168,7 +171,8 @@ def upload_photo(album_id):
         is_cover=is_cover,
         img_width=img_width,
         img_height=img_height,
-        status='processing'
+        status='processing',
+        sort_order=next_order
     )
     db.session.add(new_photo)
     db.session.commit()
@@ -201,6 +205,23 @@ def delete_photo(photo_id):
     db.session.delete(photo)
     db.session.commit()
     
+    return jsonify({'success': True})
+
+@main.route('/reorder_photos/<int:album_id>', methods=['POST'])
+def reorder_photos(album_id):
+    if not session.get('is_admin'):
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    data = request.get_json()
+    if not data or 'order' not in data:
+        return jsonify({'error': 'No order provided'}), 400
+        
+    for index, photo_id in enumerate(data['order']):
+        photo = Photo.query.filter_by(id=photo_id, album_id=album_id).first()
+        if photo:
+            photo.sort_order = index
+            
+    db.session.commit()
     return jsonify({'success': True})
 
 @main.route('/delete_album/<int:album_id>', methods=['POST'])

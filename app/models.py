@@ -22,6 +22,7 @@ class Photo(db.Model):
     img_width = db.Column(db.Integer, nullable=True)
     img_height = db.Column(db.Integer, nullable=True)
     status = db.Column(db.String(20), default='ready')
+    sort_order = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property

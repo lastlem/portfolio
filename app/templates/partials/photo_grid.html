@@ -1,6 +1,7 @@
 {% for photo in photos %}
 <div class="photo-item group relative overflow-hidden bg-zinc-900 rounded-lg break-inside-avoid w-full mb-2 sm:mb-4"
      id="photo-{{ photo.id }}"
+     data-id="{{ photo.id }}"
      data-w="{{ photo.img_width or 400 }}"
      data-h="{{ photo.img_height or 300 }}">
 
@@ -42,6 +43,13 @@
     {% endif %}
 
     {% if is_admin %}
+    <!-- Drag Handle -->
+    <div class="drag-handle absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 cursor-move bg-black/60 backdrop-blur-md text-white p-2 rounded-full hover:bg-white hover:text-black border border-white/10 shadow-lg flex items-center justify-center">
+        <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </div>
+    
     <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex flex-col gap-2">
         <!-- Set Cover Button -->
         <form action="{{ url_for('main.set_cover', album_id=photo.album_id, photo_id=photo.id) }}" method="POST">

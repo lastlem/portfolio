@@ -153,6 +153,10 @@
     </div>
 </div>
 
+{% if is_admin %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+{% endif %}
+
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('shareComponent', () => ({
@@ -182,6 +186,37 @@
             lightboxOpen: false,
             currentImage: '',
             loadingFull: false,
+
+            init() {
+                {% if is_admin %}
+                this.$nextTick(() => {
+                    const grid = document.getElementById('photo-grid');
+                    if (grid && window.Sortable) {
+                        Sortable.create(grid, {
+                            handle: '.drag-handle',
+                            animation: 150,
+                            ghostClass: 'opacity-50',
+                            onEnd: async (evt) => {
+                                const items = grid.querySelectorAll('.photo-item');
+                                const order = Array.from(items).map(item => item.dataset.id);
+                                
+                                try {
+                                    await fetch(`{{ url_for('main.reorder_photos', album_id=album.id) }}`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ order: order })
+                                    });
+                                } catch (err) {
+                                    console.error('Failed to save order', err);
+                                }
+                            }
+                        });
+                    }
+                });
+                {% endif %}
+            },
 
             async loadMore() {
                 if (this.isLoading || !this.hasMore) return;
