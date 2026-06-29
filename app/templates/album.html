@@ -76,16 +76,22 @@
 
     <style>
         #photo-grid {
-            --row-height: 150px;
+            --row-height: 250px; /* Mobile: 1-2 per row */
         }
         @media (min-width: 640px) {
-            #photo-grid { --row-height: 200px; }
+            #photo-grid { --row-height: 250px; } /* Tablet: 2-3 per row */
         }
         @media (min-width: 1024px) {
-            #photo-grid { --row-height: 250px; }
+            #photo-grid { --row-height: 300px; } /* Laptop: 3-4 per row */
+        }
+        @media (min-width: 1280px) {
+            #photo-grid { --row-height: 350px; } /* Desktop: 3-4 per row */
         }
         @media (min-width: 1536px) {
-            #photo-grid { --row-height: 300px; }
+            #photo-grid { --row-height: 400px; } /* Large Screens: 4-5 per row */
+        }
+        @media (min-width: 1920px) {
+            #photo-grid { --row-height: 450px; } /* Ultra Wide: 4-5 per row */
         }
     </style>
     <!-- Masonry Container (Row-based Justified Gallery) -->
