@@ -1,31 +1,42 @@
 {% for photo in photos %}
-<div class="photo-item group relative overflow-hidden bg-zinc-900 flex-grow"
+<div class="photo-item group relative overflow-hidden bg-zinc-900 rounded-lg break-inside-avoid w-full mb-2 sm:mb-4"
      id="photo-{{ photo.id }}"
-     style="flex-grow: {{ (photo.img_width / photo.img_height) if (photo.img_height and photo.img_height > 0) else 1 }}; 
-            width: {{ (photo.img_width / photo.img_height * 250) if (photo.img_height and photo.img_height > 0) else 250 }}px;
-            max-height: 500px;"
      data-w="{{ photo.img_width or 400 }}"
      data-h="{{ photo.img_height or 300 }}">
 
-    <div class="photo-skeleton absolute inset-0 bg-zinc-800 animate-pulse"></div>
+    <!-- Maintain aspect ratio based on original image size to prevent layout shifts -->
+    <div style="padding-bottom: {{ (photo.img_height / photo.img_width * 100) if (photo.img_width and photo.img_width > 0) else 75 }}%;"></div>
 
-    <img src="{{ url_for('static', filename=photo.thumbnail_path) }}"
-         data-full="{{ url_for('static', filename=photo.original_path) }}"
-         class="w-full h-full object-cover cursor-pointer opacity-0 transition-all duration-300 group-hover:scale-[1.03]"
-         loading="lazy"
-         alt="Photo"
-         onload="this.previousElementSibling.style.display='none'; this.style.opacity='1';"
-         onclick="window.dispatchEvent(new CustomEvent('open-lightbox', {detail: this.dataset.full}))">
-
-    <!-- Public Actions (Visible to everyone on hover) -->
-    <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex gap-2">
-        <a href="{{ url_for('static', filename=photo.original_path) }}" download
-            class="bg-black/60 backdrop-blur-md text-white px-2 py-2 rounded-full hover:bg-white hover:text-black transition-colors border border-white/10 shadow-lg flex items-center justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+    {% if photo.status == 'processing' %}
+        <!-- Pulsing placeholder while processing -->
+        <div class="absolute inset-0 bg-zinc-800 animate-pulse flex flex-col items-center justify-center">
+            <svg class="animate-spin h-6 w-6 text-zinc-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-        </a>
-    </div>
+            <span class="text-[10px] sm:text-xs text-zinc-500 font-medium tracking-wider uppercase">Processing</span>
+        </div>
+    {% else %}
+        <!-- Actual Image -->
+        <div class="photo-skeleton absolute inset-0 bg-zinc-800 animate-pulse"></div>
+        <img src="{{ url_for('static', filename=photo.thumbnail_path) }}"
+             data-full="{{ url_for('static', filename=photo.original_path) }}"
+             class="absolute inset-0 w-full h-full object-cover cursor-pointer opacity-0 transition-all duration-300 group-hover:scale-[1.03]"
+             loading="lazy"
+             alt="Photo"
+             onload="this.previousElementSibling.style.display='none'; this.style.opacity='1';"
+             onclick="window.dispatchEvent(new CustomEvent('open-lightbox', {detail: this.dataset.full}))">
+
+        <!-- Public Actions (Visible to everyone on hover) -->
+        <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex gap-2">
+            <a href="{{ url_for('static', filename=photo.original_path) }}" download
+                class="bg-black/60 backdrop-blur-md text-white px-2 py-2 rounded-full hover:bg-white hover:text-black transition-colors border border-white/10 shadow-lg flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+            </a>
+        </div>
+    {% endif %}
 
     {% if is_admin %}
     <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex flex-col gap-2">

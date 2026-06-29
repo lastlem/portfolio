@@ -1,10 +1,11 @@
 import os
 import shutil
 import zipfile
-import io
+import tempfile
+import threading
 from flask import Blueprint, render_template, request, redirect, url_for, abort, current_app, jsonify, session, make_response, send_file
 from .models import db, Album, Photo
-from .image_utils import process_and_save_image
+from .image_utils import process_and_save_image_sync, process_image_background
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tiff'}
 
@@ -91,7 +92,8 @@ def download_all(token):
     album = Album.query.filter_by(token=token).first_or_404()
     photos = Photo.query.filter_by(album_id=album.id).all()
     
-    memory_file = io.BytesIO()
+    # Используем SpooledTemporaryFile - если файл > 50 МБ, он запишется на диск, а не в RAM
+    memory_file = tempfile.SpooledTemporaryFile(max_size=50*1024*1024)
     with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
         for photo in photos:
             photo_path = os.path.join(current_app.root_path, 'static', photo.original_path)
@@ -154,7 +156,7 @@ def upload_photo(album_id):
     if not allowed_file(file.filename):
         return jsonify({'error': 'Invalid file type'}), 400
         
-    orig, opt, thumb, img_width, img_height = process_and_save_image(file, album.id)
+    orig, opt, thumb, img_width, img_height = process_and_save_image_sync(file, album.id)
 
     new_photo = Photo(
         album_id=album.id,
@@ -164,9 +166,22 @@ def upload_photo(album_id):
         is_cover=is_cover,
         img_width=img_width,
         img_height=img_height,
+        status='processing'
     )
     db.session.add(new_photo)
     db.session.commit()
+    
+    # Запускаем тяжелую обработку в фоне
+    app = current_app._get_current_object()
+    orig_path_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), orig)
+    opt_path_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), opt)
+    thumb_path_full = os.path.join(app.root_path, 'static', 'uploads', str(album.id), thumb)
+    
+    thread = threading.Thread(
+        target=process_image_background, 
+        args=(app, new_photo.id, orig_path_full, opt_path_full, thumb_path_full)
+    )
+    thread.start()
     
     return jsonify({'success': True, 'photo_id': new_photo.id})
 

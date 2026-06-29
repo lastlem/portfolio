@@ -19,7 +19,7 @@ def create_app():
         db.create_all()
         # Безопасная миграция: добавляем новые колонки если их ещё нет
         with db.engine.connect() as conn:
-            for col in ['img_width INTEGER', 'img_height INTEGER']:
+            for col in ['img_width INTEGER', 'img_height INTEGER', 'status VARCHAR(20) DEFAULT \'ready\'']:
                 try:
                     conn.execute(text(f'ALTER TABLE photo ADD COLUMN {col}'))
                     conn.commit()

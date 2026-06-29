@@ -21,4 +21,5 @@ class Photo(db.Model):
     is_cover = db.Column(db.Boolean, default=False)
     img_width = db.Column(db.Integer, nullable=True)
     img_height = db.Column(db.Integer, nullable=True)
+    status = db.Column(db.String(20), default='ready')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

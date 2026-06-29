@@ -25,6 +25,7 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-photofolio}
       - SECRET_KEY=${SECRET_KEY}
       - EXPLORE_SECRET=${EXPLORE_SECRET:-my-secret-key}
+      - ADMIN_SECRET=${ADMIN_SECRET:-admin-secret}
     depends_on:
       db:
         condition: service_healthy
