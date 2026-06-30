@@ -51,7 +51,7 @@ def view_album(token):
     
     # We still need a cover for the hero section
     first_photo = Photo.query.filter_by(album_id=album.id).order_by(Photo.sort_order.asc(), Photo.id.asc()).first()
-    cover = next((p for p in photos if p.is_cover), first_photo)
+    cover = Photo.query.filter_by(album_id=album.id, is_cover=True).first() or first_photo
     
     is_admin = session.get('is_admin', False)
     return render_template('album.html', album=album, photos=photos, pagination=pagination, cover=cover, is_admin=is_admin)

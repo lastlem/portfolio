@@ -5,11 +5,8 @@
 <!-- Hero Section / Cover -->
 {% if cover %}
 <div class="relative w-full h-[60vh] md:h-[80vh] overflow-hidden">
-    <!-- Using srcset to serve 1600w WebP to mobile/tablet, and original quality to large desktop screens -->
-    <img src="{{ url_for('static', filename=cover.sizes_dict['1600w']) }}"
-        srcset="{{ url_for('static', filename=cover.sizes_dict['1600w']) }} 1600w,
-                {{ url_for('static', filename=cover.original_path) }} {{ cover.img_width|default(3000) }}w"
-        sizes="100vw"
+    <!-- Using original quality to prevent blurring on large screens -->
+    <img src="{{ url_for('static', filename=cover.original_path) }}"
         fetchpriority="high" rel="preload" decoding="async"
         class="absolute inset-0 w-full h-full object-cover object-center" alt="Cover">
     <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-[#0a0a0a]"></div>
@@ -52,22 +49,7 @@
                 Add Photos
             </a>
 
-            <!-- Admin Pagination Controls (Classic) -->
-            {% if pagination.pages > 1 %}
-            <div
-                class="flex items-center gap-2 px-4 py-2 border border-zinc-700/50 backdrop-blur-md rounded-full bg-black/50">
-                <span class="text-xs text-zinc-400 mr-2">Admin Pages:</span>
-                {% if pagination.has_prev %}
-                <a href="{{ url_for('main.view_album', token=album.token, page=pagination.prev_num) }}"
-                    class="text-white hover:text-zinc-300 px-2">&larr; Prev</a>
-                {% endif %}
-                <span class="text-white text-sm font-semibold">{{ pagination.page }} / {{ pagination.pages }}</span>
-                {% if pagination.has_next %}
-                <a href="{{ url_for('main.view_album', token=album.token, page=pagination.next_num) }}"
-                    class="text-white hover:text-zinc-300 px-2">Next &rarr;</a>
-                {% endif %}
-            </div>
-            {% endif %}
+
             {% endif %}
         </div>
     </div>
