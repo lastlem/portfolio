@@ -143,6 +143,22 @@ def edit_album(album_id):
     album = Album.query.get_or_404(album_id)
     return render_template('edit_album.html', album=album)
 
+@main.route('/update_album/<int:album_id>', methods=['POST'])
+def update_album(album_id):
+    if not session.get('is_admin'):
+        abort(403)
+        
+    album = Album.query.get_or_404(album_id)
+    title = request.form.get('title')
+    description = request.form.get('description', '')
+    
+    if title:
+        album.title = title
+        album.description = description
+        db.session.commit()
+        
+    return redirect(url_for('main.edit_album', album_id=album.id))
+
 @main.route('/upload_photo/<int:album_id>', methods=['POST'])
 def upload_photo(album_id):
     if not session.get('is_admin'):
